@@ -1,0 +1,7 @@
+[project]
+name = "html2md"
+version = "0.1.0"
+dependencies = ["html-to-markdown"]
+
+[project.scripts]
+html2md = "html2md:main"
