@@ -23,6 +23,14 @@ Add the TOML file, install the script
 
 ```sh
 pipx install .
+pipx install -e .
 ```
 
+## New dependency
 
+```sh
+pipx inject html2md beautifulsoup4
+pipx runpip html2md list
+# BEtter option is to add the dependency to the TOML file and reinstall.
+pipx reinstall html2md
+```

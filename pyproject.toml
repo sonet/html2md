@@ -1,7 +1,9 @@
 [project]
 name = "html2md"
 version = "0.1.0"
-dependencies = ["html-to-markdown"]
+dependencies = ["html-to-markdown",
+"beautifulsoup4"
+]
 
 [project.scripts]
 html2md = "html2md:main"

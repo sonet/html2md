@@ -4,12 +4,13 @@ import argparse
 import sys
 from pathlib import Path
 
+from bs4 import BeautifulSoup
 from html_to_markdown import ConversionOptions, convert
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Convert an HTML file to a Markdown file."
+        description="Convert an HTML file to Markdown, optionally removing inline SVGs."
     )
     parser.add_argument(
         "source_html",
@@ -19,7 +20,21 @@ def parse_args() -> argparse.Namespace:
         "output_md",
         help="Path to the output Markdown file",
     )
+    parser.add_argument(
+        "--remove-svg",
+        action="store_true",
+        help="Remove all inline <svg> elements before conversion",
+    )
     return parser.parse_args()
+
+
+def remove_svg_elements(html: str) -> str:
+    soup = BeautifulSoup(html, "html.parser")
+
+    for svg in soup.find_all("svg"):
+        svg.decompose()
+
+    return str(soup)
 
 
 def main() -> int:
@@ -41,6 +56,13 @@ def main() -> int:
     except Exception as exc:
         print(f"Error reading source file: {exc}", file=sys.stderr)
         return 1
+
+    if args.remove_svg:
+        try:
+            html = remove_svg_elements(html)
+        except Exception as exc:
+            print(f"Error removing SVG elements: {exc}", file=sys.stderr)
+            return 1
 
     options = ConversionOptions(
         heading_style="atx",
