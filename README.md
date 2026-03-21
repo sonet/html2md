@@ -24,6 +24,8 @@ Add the TOML file, install the script
 ```sh
 pipx install .
 pipx install -e .
+pipx runpip html2md check
+pip freeze > requirements.txt
 ```
 
 ## New dependency

@@ -10,29 +10,63 @@ from html_to_markdown import ConversionOptions, convert
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Convert an HTML file to Markdown, optionally removing inline SVGs."
+        description="Convert HTML to Markdown with optional cleanup."
     )
+    parser.add_argument("source_html", help="Path to source HTML file")
+    parser.add_argument("output_md", help="Path to output Markdown file")
+
     parser.add_argument(
-        "source_html",
-        help="Path to the source HTML file",
-    )
-    parser.add_argument(
-        "output_md",
-        help="Path to the output Markdown file",
-    )
-    parser.add_argument(
-        "--remove-svg",
+        "--strip-svg",
         action="store_true",
-        help="Remove all inline <svg> elements before conversion",
+        help="Remove all <svg> elements",
     )
+
+    parser.add_argument(
+        "--strip-icons",
+        action="store_true",
+        help="Remove common icon elements (svg, icon classes, aria-hidden)",
+    )
+
     return parser.parse_args()
 
 
-def remove_svg_elements(html: str) -> str:
-    soup = BeautifulSoup(html, "html.parser")
-
+def strip_svg(soup: BeautifulSoup):
     for svg in soup.find_all("svg"):
         svg.decompose()
+
+
+def strip_icons(soup: BeautifulSoup):
+    # 1. Remove all SVGs (icons/emojis)
+    strip_svg(soup)
+
+    # 2. Remove <i> tags (FontAwesome, etc.)
+    for tag in soup.find_all("i"):
+        tag.decompose()
+
+    # 3. Remove elements with common icon classes
+    ICON_CLASSES = [
+        "icon", "emoji", "fa", "fas", "far", "fal", "fab",
+        "material-icons", "bi"
+    ]
+
+    for tag in soup.find_all(True):
+        classes = tag.get("class", [])
+        if any(cls in ICON_CLASSES or cls.startswith("fa-") for cls in classes):
+            tag.decompose()
+            continue
+
+        # 4. Remove aria-hidden (decorative icons)
+        if tag.get("aria-hidden") == "true":
+            tag.decompose()
+
+
+def preprocess_html(html: str, args) -> str:
+    soup = BeautifulSoup(html, "html.parser")
+
+    if args.strip_icons:
+        strip_icons(soup)
+    elif args.strip_svg:
+        strip_svg(soup)
 
     return str(soup)
 
@@ -47,22 +81,17 @@ def main() -> int:
         print(f"Error: source file does not exist: {source_path}", file=sys.stderr)
         return 1
 
-    if not source_path.is_file():
-        print(f"Error: source path is not a file: {source_path}", file=sys.stderr)
-        return 1
-
     try:
         html = source_path.read_text(encoding="utf-8")
     except Exception as exc:
-        print(f"Error reading source file: {exc}", file=sys.stderr)
+        print(f"Error reading file: {exc}", file=sys.stderr)
         return 1
 
-    if args.remove_svg:
-        try:
-            html = remove_svg_elements(html)
-        except Exception as exc:
-            print(f"Error removing SVG elements: {exc}", file=sys.stderr)
-            return 1
+    try:
+        html = preprocess_html(html, args)
+    except Exception as exc:
+        print(f"Error preprocessing HTML: {exc}", file=sys.stderr)
+        return 1
 
     options = ConversionOptions(
         heading_style="atx",
@@ -72,17 +101,17 @@ def main() -> int:
     try:
         markdown = convert(html, options)
     except Exception as exc:
-        print(f"Error converting HTML to Markdown: {exc}", file=sys.stderr)
+        print(f"Error converting HTML: {exc}", file=sys.stderr)
         return 1
 
     try:
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(markdown, encoding="utf-8")
     except Exception as exc:
-        print(f"Error writing output file: {exc}", file=sys.stderr)
+        print(f"Error writing file: {exc}", file=sys.stderr)
         return 1
 
-    print(f"Markdown written to: {output_path}")
+    print(f"✅ Markdown written to: {output_path}")
     return 0
 
 
