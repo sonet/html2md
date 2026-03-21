@@ -1,9 +1,13 @@
 
 # HTML2MD
 
+HTML2MD is a lightweight Python CLI tool that converts HTML files into clean, readable Markdown. It includes smart preprocessing features to remove noise such as SVG icons, UI elements, and navigation blocks, and can automatically extract the main content from complex pages. This makes it especially useful for content migration, documentation workflows, and preparing high-quality input for AI/RAG pipelines.
+
+## Project Setup (in Linux)
+
 Make the depencies available:
 
-Install pipx
+### Install pipx
 
 ```sh
 sudo apt update
@@ -13,8 +17,6 @@ source ~/.bashrc
 pipx --version
 ```
 
-Is this installing the dependency globally?
-
 ```sh
 pipx install html-to-markdown
 ```
@@ -22,13 +24,12 @@ pipx install html-to-markdown
 Add the TOML file, install the script
 
 ```sh
-pipx install .
 pipx install -e .
 pipx runpip html2md check
 pip freeze > requirements.txt
 ```
 
-## New dependency
+## Add a new dependency
 
 ```sh
 pipx inject html2md beautifulsoup4
