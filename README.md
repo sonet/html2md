@@ -17,14 +17,16 @@ source ~/.bashrc
 pipx --version
 ```
 
+Install the script
+
 ```sh
-pipx install html-to-markdown
+pipx install html2md
 ```
 
 Add the TOML file, install the script
 
 ```sh
-pipx install -e .
+pipx install -e . --force
 pipx runpip html2md check
 pip freeze > requirements.txt
 ```
@@ -34,6 +36,6 @@ pip freeze > requirements.txt
 ```sh
 pipx inject html2md beautifulsoup4
 pipx runpip html2md list
-# BEtter option is to add the dependency to the TOML file and reinstall.
+# Better option is to add the dependency to the TOML file and reinstall.
 pipx reinstall html2md
 ```
