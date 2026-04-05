@@ -267,6 +267,17 @@ def extract_markdown_content(result) -> str:
     raise TypeError(f"Unsupported conversion result type: {type(result).__name__}")
 
 
+def strip_leading_front_matter(markdown: str) -> str:
+    if not markdown.startswith("---\n"):
+        return markdown
+
+    end = markdown.find("\n---\n", 4)
+    if end == -1:
+        return markdown
+
+    return markdown[end + 5 :].lstrip("\n")
+
+
 def main() -> int:
     args = parse_args()
 
@@ -305,6 +316,7 @@ def main() -> int:
         print(f"Error converting HTML to Markdown: {exc}", file=sys.stderr)
         return 1
 
+    markdown = strip_leading_front_matter(markdown)
     markdown = markdown.strip() + "\n"
 
     try:
