@@ -43,10 +43,19 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Remove all inline SVG elements before conversion",
     )
-    parser.add_argument(
+    strip_icons_group = parser.add_mutually_exclusive_group()
+    strip_icons_group.add_argument(
         "--strip-icons",
+        dest="strip_icons",
         action="store_true",
+        default=True,
         help="Remove SVGs, icon tags, and decorative icon-like nodes",
+    )
+    strip_icons_group.add_argument(
+        "--no-strip-icons",
+        dest="strip_icons",
+        action="store_false",
+        help="Keep SVGs and icon-like nodes unless --strip-svg is set",
     )
     parser.add_argument(
         "--main-content-only",
@@ -244,6 +253,20 @@ def preprocess_html(html: str, args: argparse.Namespace) -> str:
     return processed_html
 
 
+def extract_markdown_content(result) -> str:
+    if isinstance(result, str):
+        return result
+
+    if isinstance(result, dict):
+        content = result.get("content")
+        if isinstance(content, str):
+            return content
+        if content is None:
+            return ""
+
+    raise TypeError(f"Unsupported conversion result type: {type(result).__name__}")
+
+
 def main() -> int:
     args = parse_args()
 
@@ -276,7 +299,8 @@ def main() -> int:
     )
 
     try:
-        markdown = convert(html, options)
+        conversion_result = convert(html, options)
+        markdown = extract_markdown_content(conversion_result)
     except Exception as exc:
         print(f"Error converting HTML to Markdown: {exc}", file=sys.stderr)
         return 1
